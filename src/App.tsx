@@ -1,4 +1,4 @@
-import { type FormEvent, type SVGProps, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, type KeyboardEvent, type SVGProps, useEffect, useRef, useState } from 'react'
 import './App.css'
 
 type Activity = {
@@ -24,6 +24,32 @@ function shiftDate(date: Date, days: number) {
   return shifted
 }
 
+function isWeekend(date: Date) {
+  return date.getDay() === 0 || date.getDay() === 6
+}
+
+function getPreviousWeekday(date: Date) {
+  let previous = shiftDate(date, -1)
+
+  while (isWeekend(previous)) {
+    previous = shiftDate(previous, -1)
+  }
+
+  return previous
+}
+
+function getRecentWeekdays(date: Date, count: number) {
+  const weekdays: Date[] = []
+  let current = new Date(date)
+
+  while (weekdays.length < count) {
+    if (!isWeekend(current)) weekdays.push(current)
+    current = shiftDate(current, -1)
+  }
+
+  return weekdays
+}
+
 function formatDate(date: Date, includeWeekday = false) {
   return new Intl.DateTimeFormat('en-GB', {
     ...(includeWeekday && { weekday: 'long' }),
@@ -33,11 +59,8 @@ function formatDate(date: Date, includeWeekday = false) {
   }).format(date)
 }
 
-function formatHistoryDate(date: Date, todayKey: string) {
-  if (toDateKey(date) === todayKey) return 'Today'
-  if (toDateKey(date) === toDateKey(shiftDate(new Date(), -1))) return 'Yesterday'
-
-  return formatDate(date)
+function formatWeekday(date: Date) {
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(date)
 }
 
 function formatTime(isoDate: string) {
@@ -102,25 +125,41 @@ function ArrowIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+function CloseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path d="m5 5 10 10M15 5 5 15" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function App() {
   const [activities, setActivities] = useState<Activity[]>(loadActivities)
   const [newActivity, setNewActivity] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [selectedHistoryDay, setSelectedHistoryDay] = useState<Date | null>(null)
+  const historyDialogRef = useRef<HTMLDialogElement>(null)
 
   const now = new Date()
   const todayKey = toDateKey(now)
-  const yesterdayKey = toDateKey(shiftDate(now, -1))
-  const historyDays = useMemo(
-    () => Array.from({ length: HISTORY_LENGTH }, (_, index) => shiftDate(new Date(), -index)),
-    [],
-  )
+  const previousWeekday = getPreviousWeekday(now)
+  const previousWeekdayKey = toDateKey(previousWeekday)
+  const historyDays = getRecentWeekdays(now, HISTORY_LENGTH)
   const todayActivities = activities.filter((activity) => activity.date === todayKey)
-  const yesterdayActivities = activities.filter((activity) => activity.date === yesterdayKey)
+  const previousWorkdayActivities = activities.filter((activity) => activity.date === previousWeekdayKey)
+  const selectedHistoryActivities = selectedHistoryDay
+    ? activities.filter((activity) => activity.date === toDateKey(selectedHistoryDay))
+    : []
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(activities))
   }, [activities])
+
+  useEffect(() => {
+    const dialog = historyDialogRef.current
+    if (selectedHistoryDay && dialog && !dialog.open) dialog.showModal()
+  }, [selectedHistoryDay])
 
   function addActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -161,13 +200,24 @@ function App() {
     cancelEditing()
   }
 
+  function openHistoryDay(day: Date) {
+    setSelectedHistoryDay(new Date(day))
+  }
+
+  function handleHistoryDayKeyDown(event: KeyboardEvent<HTMLElement>, day: Date) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+
+    event.preventDefault()
+    openHistoryDay(day)
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Daybook home">
+        <div className="brand">
           <span className="brand-mark"><SparkIcon /></span>
           <span>Daybook</span>
-        </a>
+        </div>
         <div className="today-label">
           <span className="status-dot" />
           {formatDate(now, true)}
@@ -250,18 +300,18 @@ function App() {
             )}
           </section>
 
-          <aside className="panel yesterday-panel" aria-labelledby="yesterday-heading">
+          <aside className="panel yesterday-panel" aria-labelledby="previous-workday-heading">
             <div className="panel-heading">
               <div>
-                <span className="section-kicker coral">Yesterday</span>
-                <h2 id="yesterday-heading">At a glance</h2>
+                <span className="section-kicker coral">Previous workday</span>
+                <h2 id="previous-workday-heading">At a glance</h2>
               </div>
-              <span className="date-chip">{formatDate(shiftDate(now, -1))}</span>
+              <span className="date-chip">{formatDate(previousWeekday, true)}</span>
             </div>
 
-            {yesterdayActivities.length > 0 ? (
+            {previousWorkdayActivities.length > 0 ? (
               <ul className="yesterday-list">
-                {yesterdayActivities.map((activity) => (
+                {previousWorkdayActivities.map((activity) => (
                   <li key={activity.id}>
                     <span className="tiny-check"><CheckIcon /></span>
                     <p>{activity.text}</p>
@@ -272,7 +322,7 @@ function App() {
               <div className="empty-state compact">
                 <span className="empty-line" />
                 <h3>No activities recorded</h3>
-                <p>Yesterday’s entries will appear here for a quick standup recap.</p>
+                <p>The previous workday’s entries will appear here for a quick standup recap.</p>
               </div>
             )}
           </aside>
@@ -282,7 +332,7 @@ function App() {
           <div className="history-heading-row">
             <div>
               <span className="section-kicker">History</span>
-              <h2 id="history-heading">The last 7 days</h2>
+              <h2 id="history-heading">The last 7 workdays</h2>
             </div>
             <p>Stored privately in this browser</p>
           </div>
@@ -292,9 +342,21 @@ function App() {
               const key = toDateKey(day)
               const dayActivities = activities.filter((activity) => activity.date === key)
               return (
-                <article className={`history-day${key === todayKey ? ' current' : ''}`} key={key}>
+                <article
+                  aria-haspopup="dialog"
+                  aria-label={`View ${dayActivities.length} ${dayActivities.length === 1 ? 'activity' : 'activities'} for ${formatDate(day, true)}`}
+                  className={`history-day${key === todayKey ? ' current' : ''}`}
+                  key={key}
+                  onClick={() => openHistoryDay(day)}
+                  onKeyDown={(event) => handleHistoryDayKeyDown(event, day)}
+                  role="button"
+                  tabIndex={0}
+                >
                   <div className="history-day-heading">
-                    <span>{formatHistoryDate(day, todayKey)}</span>
+                    <div className="history-date">
+                      <span>{key === todayKey ? 'Today' : formatWeekday(day)}</span>
+                      <span>{formatDate(day)}</span>
+                    </div>
                     <strong>{dayActivities.length}</strong>
                   </div>
                   {dayActivities.length > 0 ? (
@@ -318,6 +380,58 @@ function App() {
         <span><SparkIcon /> Daybook</span>
         <p>Small notes. Better recaps.</p>
       </footer>
+
+      <dialog
+        aria-labelledby="history-modal-title"
+        className="history-modal"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close()
+        }}
+        onClose={() => setSelectedHistoryDay(null)}
+        ref={historyDialogRef}
+      >
+        {selectedHistoryDay && (
+          <div className="history-modal-content">
+            <div className="history-modal-heading">
+              <div>
+                <span className="section-kicker">Daily recap</span>
+                <h2 id="history-modal-title">
+                  {toDateKey(selectedHistoryDay) === todayKey ? 'Today' : formatWeekday(selectedHistoryDay)}
+                </h2>
+                <p>{formatDate(selectedHistoryDay)}</p>
+              </div>
+              <button
+                aria-label="Close daily recap"
+                className="modal-close-button"
+                onClick={() => historyDialogRef.current?.close()}
+                type="button"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            {selectedHistoryActivities.length > 0 ? (
+              <ol className="history-modal-list">
+                {selectedHistoryActivities.map((activity) => (
+                  <li key={activity.id}>
+                    <span className="check-circle"><CheckIcon /></span>
+                    <div>
+                      <p>{activity.text}</p>
+                      <time dateTime={activity.createdAt}>{formatTime(activity.createdAt)}</time>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <div className="history-modal-empty">
+                <span className="empty-line" />
+                <h3>No activities recorded</h3>
+                <p>There are no entries for this workday.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </dialog>
     </main>
   )
 }
