@@ -8,8 +8,9 @@ type Activity = {
   createdAt: string
 }
 
-const STORAGE_KEY = 'daybook.activities.v1'
+const STORAGE_KEY = import.meta.env.DEV ? 'daybook.activities.dev.v1' : 'daybook.activities.v1'
 const HISTORY_LENGTH = 7
+const VISIBLE_ENTRY_LIMIT = 5
 
 function toDateKey(date: Date) {
   const year = date.getFullYear()
@@ -50,6 +51,66 @@ function getRecentWeekdays(date: Date, count: number) {
   return weekdays
 }
 
+function createMockActivities(): Activity[] {
+  const today = new Date()
+  const days = [today, ...getRecentWeekdays(getPreviousWeekday(today), HISTORY_LENGTH - 1)]
+  const entries = [
+    [
+      'Reviewed pull requests for the onboarding flow',
+      'Fixed validation on the account settings form',
+      'Paired with Alex on the API migration',
+      'Updated the release checklist',
+      'Investigated a slow dashboard query',
+      'Prepared notes for the product sync',
+      'Shared the staging build with QA',
+    ],
+    [
+      'Shipped the new onboarding welcome screen',
+      'Resolved two accessibility issues',
+      'Reviewed analytics for the latest release',
+      'Documented the deployment process',
+      'Met with design to refine empty states',
+      'Planned the next iteration with the team',
+    ],
+    [
+      'Added loading states to the activity feed',
+      'Refactored the date formatting helpers',
+      'Reviewed the mobile layout',
+      'Triaged incoming bug reports',
+    ],
+    [
+      'Improved keyboard navigation',
+      'Updated dependencies and verified the build',
+      'Wrote release notes for the weekly update',
+    ],
+    [
+      'Tested the history recap modal',
+      'Simplified the local storage integration',
+      'Reviewed copy changes with the team',
+      'Fixed spacing on smaller screens',
+      'Prepared the sprint demo',
+    ],
+    [
+      'Mapped the next set of product improvements',
+      'Cleaned up old implementation notes',
+    ],
+  ]
+
+  return days.flatMap((day, dayIndex) =>
+    (entries[dayIndex] ?? []).map((text, entryIndex) => {
+      const createdAt = new Date(day)
+      createdAt.setHours(9 + Math.floor(entryIndex / 2), entryIndex % 2 === 0 ? 0 : 30, 0, 0)
+
+      return {
+        id: `mock-${toDateKey(day)}-${entryIndex}`,
+        text,
+        date: toDateKey(day),
+        createdAt: createdAt.toISOString(),
+      }
+    }),
+  )
+}
+
 function formatDate(date: Date, includeWeekday = false) {
   return new Intl.DateTimeFormat('en-GB', {
     ...(includeWeekday && { weekday: 'long' }),
@@ -73,12 +134,12 @@ function formatTime(isoDate: string) {
 function loadActivities(): Activity[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) return []
+    if (!stored) return import.meta.env.DEV ? createMockActivities() : []
 
     const parsed: unknown = JSON.parse(stored)
-    if (!Array.isArray(parsed)) return []
+    if (!Array.isArray(parsed)) return import.meta.env.DEV ? createMockActivities() : []
 
-    return parsed.filter(
+    const storedActivities = parsed.filter(
       (activity): activity is Activity =>
         typeof activity === 'object' &&
         activity !== null &&
@@ -87,8 +148,12 @@ function loadActivities(): Activity[] {
         typeof activity.date === 'string' &&
         typeof activity.createdAt === 'string',
     )
+
+    return storedActivities.length > 0 || !import.meta.env.DEV
+      ? storedActivities
+      : createMockActivities()
   } catch {
-    return []
+    return import.meta.env.DEV ? createMockActivities() : []
   }
 }
 
@@ -117,6 +182,14 @@ function EditIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+function DeleteIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path d="M5.8 6.5v9.2h8.4V6.5M4.5 6.5h11M8 6.5V4.3h4v2.2M8.5 9v4.3M11.5 9v4.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function ArrowIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
@@ -139,7 +212,9 @@ function App() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [selectedHistoryDay, setSelectedHistoryDay] = useState<Date | null>(null)
+  const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null)
   const historyDialogRef = useRef<HTMLDialogElement>(null)
+  const deleteDialogRef = useRef<HTMLDialogElement>(null)
 
   const now = new Date()
   const todayKey = toDateKey(now)
@@ -160,6 +235,11 @@ function App() {
     const dialog = historyDialogRef.current
     if (selectedHistoryDay && dialog && !dialog.open) dialog.showModal()
   }, [selectedHistoryDay])
+
+  useEffect(() => {
+    const dialog = deleteDialogRef.current
+    if (activityToDelete && dialog && !dialog.open) dialog.showModal()
+  }, [activityToDelete])
 
   function addActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -198,6 +278,14 @@ function App() {
       current.map((activity) => (activity.id === id ? { ...activity, text } : activity)),
     )
     cancelEditing()
+  }
+
+  function confirmDeleteActivity() {
+    if (!activityToDelete) return
+
+    setActivities((current) => current.filter((item) => item.id !== activityToDelete.id))
+    if (editingId === activityToDelete.id) cancelEditing()
+    deleteDialogRef.current?.close()
   }
 
   function openHistoryDay(day: Date) {
@@ -260,7 +348,7 @@ function App() {
             </div>
 
             {todayActivities.length > 0 ? (
-              <ol className="activity-list">
+              <ol className={`activity-list${todayActivities.length > VISIBLE_ENTRY_LIMIT ? ' scrollable-list' : ''}`}>
                 {todayActivities.map((activity) => (
                   <li className="activity-item" key={activity.id}>
                     <span className="check-circle"><CheckIcon /></span>
@@ -283,9 +371,14 @@ function App() {
                           <p>{activity.text}</p>
                           <time dateTime={activity.createdAt}>{formatTime(activity.createdAt)}</time>
                         </div>
-                        <button className="icon-button" type="button" onClick={() => startEditing(activity)} aria-label={`Edit ${activity.text}`}>
-                          <EditIcon />
-                        </button>
+                        <div className="activity-actions">
+                          <button className="icon-button" type="button" onClick={() => startEditing(activity)} aria-label={`Edit ${activity.text}`}>
+                            <EditIcon />
+                          </button>
+                          <button className="icon-button delete-button" type="button" onClick={() => setActivityToDelete(activity)} aria-label={`Delete ${activity.text}`}>
+                            <DeleteIcon />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </li>
@@ -310,7 +403,7 @@ function App() {
             </div>
 
             {previousWorkdayActivities.length > 0 ? (
-              <ul className="yesterday-list">
+              <ul className={`yesterday-list${previousWorkdayActivities.length > VISIBLE_ENTRY_LIMIT ? ' scrollable-list' : ''}`}>
                 {previousWorkdayActivities.map((activity) => (
                   <li key={activity.id}>
                     <span className="tiny-check"><CheckIcon /></span>
@@ -377,8 +470,9 @@ function App() {
       </div>
 
       <footer>
-        <span><SparkIcon /> Daybook</span>
-        <p>Small notes. Better recaps.</p>
+        <span className="footer-brand"><SparkIcon /> Daybook</span>
+        <p className="footer-tagline">Small notes. Better recaps.</p>
+        <p className="footer-credit">Made by Federico Moretti</p>
       </footer>
 
       <dialog
@@ -429,6 +523,35 @@ function App() {
                 <p>There are no entries for this workday.</p>
               </div>
             )}
+          </div>
+        )}
+      </dialog>
+
+      <dialog
+        aria-describedby="delete-confirmation-description"
+        aria-labelledby="delete-confirmation-title"
+        className="delete-confirmation-modal"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close()
+        }}
+        onClose={() => setActivityToDelete(null)}
+        ref={deleteDialogRef}
+      >
+        {activityToDelete && (
+          <div className="delete-confirmation-content">
+            <span className="delete-confirmation-icon"><DeleteIcon /></span>
+            <h2 id="delete-confirmation-title">Delete this entry?</h2>
+            <p id="delete-confirmation-description">
+              “{activityToDelete.text}” will be permanently removed. This cannot be undone.
+            </p>
+            <div className="delete-confirmation-actions">
+              <button className="cancel-delete-button" onClick={() => deleteDialogRef.current?.close()} type="button">
+                Cancel
+              </button>
+              <button className="confirm-delete-button" onClick={confirmDeleteActivity} type="button">
+                Delete entry
+              </button>
+            </div>
           </div>
         )}
       </dialog>

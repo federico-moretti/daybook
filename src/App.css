@@ -17,7 +17,7 @@
   height: 72px;
   justify-content: space-between;
   margin: 0 auto;
-  max-width: 1240px;
+  max-width: 1180px;
   padding: 0 32px;
 }
 
@@ -258,6 +258,29 @@
   padding: 0;
 }
 
+.scrollable-list {
+  overscroll-behavior: contain;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-color: rgba(107, 80, 189, 0.38) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.activity-list.scrollable-list,
+.yesterday-list.scrollable-list {
+  max-height: 360px;
+}
+
+.scrollable-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+  background: rgba(107, 80, 189, 0.3);
+  border-radius: 999px;
+}
+
 .activity-item {
   align-items: flex-start;
   border-top: 1px solid rgba(43, 37, 53, 0.09);
@@ -312,6 +335,14 @@
   margin-top: 4px;
 }
 
+.activity-actions {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
 .icon-button {
   align-items: center;
   background: transparent;
@@ -336,6 +367,11 @@
 .icon-button:hover {
   background: #f1eef6;
   color: #6246bc;
+}
+
+.delete-button:hover {
+  background: #f8e9e6;
+  color: #ad5848;
 }
 
 .icon-button svg {
@@ -628,7 +664,8 @@
   width: calc(100% - 32px);
 }
 
-.history-modal::backdrop {
+.history-modal::backdrop,
+.delete-confirmation-modal::backdrop {
   backdrop-filter: blur(5px);
   background: rgba(33, 28, 40, 0.48);
 }
@@ -752,13 +789,110 @@
   margin: 0;
 }
 
+.delete-confirmation-modal {
+  background: transparent;
+  border: 0;
+  max-width: 420px;
+  padding: 0;
+  width: calc(100% - 32px);
+}
+
+.delete-confirmation-content {
+  align-items: center;
+  background: #fbfaf7;
+  border: 1px solid rgba(105, 63, 53, 0.14);
+  border-radius: 22px;
+  box-shadow: 0 28px 80px rgba(29, 23, 38, 0.28);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  text-align: center;
+}
+
+.delete-confirmation-icon {
+  align-items: center;
+  background: #f8e9e6;
+  border-radius: 50%;
+  color: #ad5848;
+  display: flex;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+.delete-confirmation-icon svg {
+  height: 24px;
+  width: 24px;
+}
+
+.delete-confirmation-content h2 {
+  color: #2f2934;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  margin: 17px 0 0;
+}
+
+.delete-confirmation-content p {
+  color: #7f7882;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 9px 0 0;
+  max-width: 330px;
+  overflow-wrap: anywhere;
+}
+
+.delete-confirmation-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 25px;
+  width: 100%;
+}
+
+.cancel-delete-button,
+.confirm-delete-button {
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 42px;
+  padding: 10px 15px;
+  transition: background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.cancel-delete-button {
+  background: #eeebef;
+  color: #6d6671;
+}
+
+.cancel-delete-button:hover {
+  background: #e5e0e7;
+}
+
+.confirm-delete-button {
+  background: #ad5848;
+  box-shadow: 0 8px 18px rgba(173, 88, 72, 0.2);
+  color: white;
+}
+
+.confirm-delete-button:hover {
+  background: #984839;
+  box-shadow: 0 10px 22px rgba(173, 88, 72, 0.27);
+  transform: translateY(-1px);
+}
+
 footer {
   align-items: center;
   border-top: 1px solid rgba(51, 44, 62, 0.1);
   color: #9c969e;
-  display: flex;
+  display: grid;
   font-size: 11px;
-  justify-content: space-between;
+  grid-template-columns: 1fr auto 1fr;
   margin: 0 auto;
   max-width: 1180px;
   padding: 24px 32px 30px;
@@ -784,9 +918,20 @@ footer p {
   margin: 0;
 }
 
+.footer-brand {
+  justify-self: start;
+}
+
+.footer-tagline {
+  justify-self: center;
+}
+
+.footer-credit {
+  justify-self: end;
+}
+
 button:focus-visible,
-a:focus-visible,
-input:focus-visible {
+a:focus-visible {
   outline: 3px solid rgba(105, 78, 196, 0.28);
   outline-offset: 2px;
 }
@@ -808,7 +953,7 @@ input:focus-visible {
 @media (max-width: 680px) {
   .topbar {
     height: 64px;
-    padding: 0 20px;
+    padding: 0 18px;
   }
 
   .today-label {
@@ -889,7 +1034,20 @@ input:focus-visible {
   }
 
   footer {
+    grid-template-columns: 1fr 1fr;
     padding: 22px 20px 26px;
+    row-gap: 10px;
+  }
+
+  .footer-tagline {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .footer-credit {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
   }
 }
 
