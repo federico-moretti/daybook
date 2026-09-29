@@ -1,0 +1,125 @@
+name: CI and deploy
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload production build
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: daybook-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy production
+    needs: verify
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    environment:
+      name: production
+      url: https://daybook.federicomoretti.dev
+
+    concurrency:
+      group: daybook-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Download production build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: daybook-${{ github.sha }}
+          path: dist
+
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          : "${DEPLOY_SSH_KEY:?Missing production secret DEPLOY_SSH_KEY}"
+          : "${DEPLOY_KNOWN_HOSTS:?Missing production secret DEPLOY_KNOWN_HOSTS}"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          chmod 644 "$HOME/.ssh/known_hosts"
+
+      - name: Upload and activate release
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          : "${DEPLOY_HOST:?Missing production variable DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing production variable DEPLOY_USER}"
+          release="/var/www/daybook-deploy/releases/$GITHUB_SHA"
+          target="$DEPLOY_USER@$DEPLOY_HOST"
+          ssh_options=(
+            -i "$HOME/.ssh/id_ed25519"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+          )
+
+          ssh "${ssh_options[@]}" "$target" "mkdir -p '$release'"
+
+          rsync \
+            -az \
+            --delete \
+            --chmod=D755,F644 \
+            -e "ssh -i $HOME/.ssh/id_ed25519 -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            dist/ \
+            "$target:$release/"
+
+          ssh "${ssh_options[@]}" "$target" \
+            "test -s '$release/index.html' &&
+             ln -sfn 'releases/$GITHUB_SHA' '/var/www/daybook-deploy/current.next' &&
+             mv -Tf '/var/www/daybook-deploy/current.next' '/var/www/daybook-deploy/current'"
+
+      - name: Check production
+        run: |
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-delay 2 \
+            https://daybook.federicomoretti.dev/
