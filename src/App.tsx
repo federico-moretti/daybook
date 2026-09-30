@@ -208,6 +208,7 @@ function CloseIcon(props: SVGProps<SVGSVGElement>) {
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>(loadActivities)
+  const [now, setNow] = useState(() => new Date())
   const [newActivity, setNewActivity] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -216,7 +217,6 @@ function App() {
   const historyDialogRef = useRef<HTMLDialogElement>(null)
   const deleteDialogRef = useRef<HTMLDialogElement>(null)
 
-  const now = new Date()
   const todayKey = toDateKey(now)
   const previousWeekday = getPreviousWeekday(now)
   const previousWeekdayKey = toDateKey(previousWeekday)
@@ -226,6 +226,37 @@ function App() {
   const selectedHistoryActivities = selectedHistoryDay
     ? activities.filter((activity) => activity.date === toDateKey(selectedHistoryDay))
     : []
+
+  useEffect(() => {
+    let timeoutId: number
+
+    function scheduleNextDay() {
+      const current = new Date()
+      const nextDay = new Date(current)
+      nextDay.setHours(24, 0, 0, 0)
+      window.clearTimeout(timeoutId)
+      timeoutId = window.setTimeout(refreshDay, nextDay.getTime() - current.getTime())
+    }
+
+    function refreshDay() {
+      const current = new Date()
+      setNow(current)
+      scheduleNextDay()
+    }
+
+    function handleVisibilityChange() {
+      if (!document.hidden) refreshDay()
+    }
+
+    scheduleNextDay()
+    window.addEventListener('focus', refreshDay)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      window.clearTimeout(timeoutId)
+      window.removeEventListener('focus', refreshDay)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(activities))
@@ -246,13 +277,14 @@ function App() {
     const text = newActivity.trim()
     if (!text) return
 
-    const createdAt = new Date().toISOString()
+    const createdOn = new Date()
+    setNow(createdOn)
     setActivities((current) => [
       {
         id: crypto.randomUUID(),
         text,
-        date: toDateKey(new Date()),
-        createdAt,
+        date: toDateKey(createdOn),
+        createdAt: createdOn.toISOString(),
       },
       ...current,
     ])
