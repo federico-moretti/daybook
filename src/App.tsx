@@ -6,6 +6,7 @@ type Activity = {
   text: string
   date: string
   createdAt: string
+  status?: 'todo' | 'done'
 }
 
 const STORAGE_KEY = import.meta.env.DEV ? 'daybook.activities.dev.v1' : 'daybook.activities.v1'
@@ -146,7 +147,8 @@ function loadActivities(): Activity[] {
         typeof activity.id === 'string' &&
         typeof activity.text === 'string' &&
         typeof activity.date === 'string' &&
-        typeof activity.createdAt === 'string',
+        typeof activity.createdAt === 'string' &&
+        (!('status' in activity) || activity.status === 'todo' || activity.status === 'done'),
     )
 
     return storedActivities.length > 0 || !import.meta.env.DEV
@@ -210,6 +212,7 @@ function App() {
   const [activities, setActivities] = useState<Activity[]>(loadActivities)
   const [now, setNow] = useState(() => new Date())
   const [newActivity, setNewActivity] = useState('')
+  const [captureMode, setCaptureMode] = useState<'done' | 'todo'>('done')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [selectedHistoryDay, setSelectedHistoryDay] = useState<Date | null>(null)
@@ -221,10 +224,11 @@ function App() {
   const previousWeekday = getPreviousWeekday(now)
   const previousWeekdayKey = toDateKey(previousWeekday)
   const historyDays = getRecentWeekdays(now, HISTORY_LENGTH)
-  const todayActivities = activities.filter((activity) => activity.date === todayKey)
-  const previousWorkdayActivities = activities.filter((activity) => activity.date === previousWeekdayKey)
+  const pendingTodos = activities.filter((activity) => activity.status === 'todo')
+  const todayActivities = activities.filter((activity) => activity.status !== 'todo' && activity.date === todayKey)
+  const previousWorkdayActivities = activities.filter((activity) => activity.status !== 'todo' && activity.date === previousWeekdayKey)
   const selectedHistoryActivities = selectedHistoryDay
-    ? activities.filter((activity) => activity.date === toDateKey(selectedHistoryDay))
+    ? activities.filter((activity) => activity.status !== 'todo' && activity.date === toDateKey(selectedHistoryDay))
     : []
 
   useEffect(() => {
@@ -272,7 +276,7 @@ function App() {
     if (activityToDelete && dialog && !dialog.open) dialog.showModal()
   }, [activityToDelete])
 
-  function addActivity(event: FormEvent<HTMLFormElement>) {
+  function addEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const text = newActivity.trim()
     if (!text) return
@@ -285,10 +289,21 @@ function App() {
         text,
         date: toDateKey(createdOn),
         createdAt: createdOn.toISOString(),
+        status: captureMode,
       },
       ...current,
     ])
     setNewActivity('')
+  }
+
+  function completeTodo(id: string) {
+    const completedOn = new Date()
+    setNow(completedOn)
+    setActivities((current) => current.map((activity) =>
+      activity.id === id && activity.status === 'todo'
+        ? { ...activity, status: 'done', date: toDateKey(completedOn), createdAt: completedOn.toISOString() }
+        : activity,
+    ))
   }
 
   function startEditing(activity: Activity) {
@@ -331,6 +346,23 @@ function App() {
     openHistoryDay(day)
   }
 
+  function renderEditForm(activity: Activity) {
+    return (
+      <form className="edit-form" onSubmit={(event) => saveEdit(event, activity.id)}>
+        <input
+          aria-label={`Edit ${activity.status === 'todo' ? 'to-do' : 'activity'}`}
+          value={editValue}
+          onChange={(event) => setEditValue(event.target.value)}
+          autoFocus
+        />
+        <div className="edit-actions">
+          <button className="text-button muted" type="button" onClick={cancelEditing}>Cancel</button>
+          <button className="save-button" type="submit" disabled={!editValue.trim()}>Save</button>
+        </div>
+      </form>
+    )
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -346,27 +378,73 @@ function App() {
 
       <div className="content" id="top">
         <section className="hero" aria-labelledby="hero-title">
-          <div className="eyebrow">Your daily work log</div>
-          <h1 id="hero-title">What did you get done?</h1>
-          <p>Capture it while it’s fresh. Your standup will practically write itself.</p>
+          <div className="eyebrow">Your daily work, in one place</div>
+          <h1 id="hero-title">{captureMode === 'todo' ? 'What’s up next?' : 'What did you get done?'}</h1>
+          <p>{captureMode === 'todo' ? 'Keep a note of what you want to tackle next.' : 'Capture it while it’s fresh. Your standup will practically write itself.'}</p>
 
-          <form className="capture-form" onSubmit={addActivity}>
-            <label htmlFor="activity">Add an activity</label>
+          <div className="capture-mode" role="group" aria-label="What are you adding?">
+            <button type="button" aria-pressed={captureMode === 'done'} onClick={() => setCaptureMode('done')}>Done</button>
+            <button type="button" aria-pressed={captureMode === 'todo'} onClick={() => setCaptureMode('todo')}>To do</button>
+          </div>
+          <form className="capture-form" onSubmit={addEntry}>
+            <label htmlFor="activity">{captureMode === 'todo' ? 'Add a to-do' : 'Add an activity'}</label>
             <div className="capture-row">
               <input
                 id="activity"
                 value={newActivity}
                 onChange={(event) => setNewActivity(event.target.value)}
-                placeholder="e.g. Shipped the new onboarding flow"
+                placeholder={captureMode === 'todo' ? 'e.g. Review the onboarding flow' : 'e.g. Shipped the new onboarding flow'}
                 autoComplete="off"
               />
               <button className="primary-button" type="submit" disabled={!newActivity.trim()}>
-                Log activity
+                {captureMode === 'todo' ? 'Add to do' : 'Log activity'}
                 <ArrowIcon />
               </button>
             </div>
             <span className="form-hint">Press Enter to add</span>
           </form>
+        </section>
+
+        <section className="panel todo-panel" aria-labelledby="todo-heading">
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker">To do</span>
+              <h2 id="todo-heading">Up next</h2>
+            </div>
+            <span className="count-badge">{pendingTodos.length} {pendingTodos.length === 1 ? 'to-do' : 'to-dos'}</span>
+          </div>
+
+          {pendingTodos.length > 0 ? (
+            <ul className={`activity-list todo-list${pendingTodos.length > VISIBLE_ENTRY_LIMIT ? ' scrollable-list' : ''}`}>
+              {pendingTodos.map((todo) => (
+                <li className="activity-item todo-item" key={todo.id}>
+                  <span className="todo-circle" aria-hidden="true" />
+                  {editingId === todo.id ? renderEditForm(todo) : (
+                    <div className="activity-content">
+                      <div>
+                        <p>{todo.text}</p>
+                        <time dateTime={todo.createdAt}>Added {formatDate(new Date(todo.createdAt))}</time>
+                      </div>
+                      <div className="activity-actions">
+                        <button className="complete-button" type="button" onClick={() => completeTodo(todo.id)} aria-label={`Mark ${todo.text} done`}>Done</button>
+                        <button className="icon-button" type="button" onClick={() => startEditing(todo)} aria-label={`Edit ${todo.text}`}>
+                          <EditIcon />
+                        </button>
+                        <button className="icon-button delete-button" type="button" onClick={() => setActivityToDelete(todo)} aria-label={`Delete ${todo.text}`}>
+                          <DeleteIcon />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="empty-state todo-empty">
+              <h3>Nothing up next</h3>
+              <p>Choose “To do” above to keep track of what you want to tackle.</p>
+            </div>
+          )}
         </section>
 
         <div className="dashboard-grid">
@@ -384,20 +462,7 @@ function App() {
                 {todayActivities.map((activity) => (
                   <li className="activity-item" key={activity.id}>
                     <span className="check-circle"><CheckIcon /></span>
-                    {editingId === activity.id ? (
-                      <form className="edit-form" onSubmit={(event) => saveEdit(event, activity.id)}>
-                        <input
-                          aria-label="Edit activity"
-                          value={editValue}
-                          onChange={(event) => setEditValue(event.target.value)}
-                          autoFocus
-                        />
-                        <div className="edit-actions">
-                          <button className="text-button muted" type="button" onClick={cancelEditing}>Cancel</button>
-                          <button className="save-button" type="submit" disabled={!editValue.trim()}>Save</button>
-                        </div>
-                      </form>
-                    ) : (
+                    {editingId === activity.id ? renderEditForm(activity) : (
                       <div className="activity-content">
                         <div>
                           <p>{activity.text}</p>
@@ -465,7 +530,7 @@ function App() {
           <div className="history-grid">
             {historyDays.map((day) => {
               const key = toDateKey(day)
-              const dayActivities = activities.filter((activity) => activity.date === key)
+              const dayActivities = activities.filter((activity) => activity.status !== 'todo' && activity.date === key)
               return (
                 <article
                   aria-haspopup="dialog"
@@ -572,7 +637,7 @@ function App() {
         {activityToDelete && (
           <div className="delete-confirmation-content">
             <span className="delete-confirmation-icon"><DeleteIcon /></span>
-            <h2 id="delete-confirmation-title">Delete this entry?</h2>
+            <h2 id="delete-confirmation-title">Delete this {activityToDelete.status === 'todo' ? 'to-do' : 'entry'}?</h2>
             <p id="delete-confirmation-description">
               “{activityToDelete.text}” will be permanently removed. This cannot be undone.
             </p>
@@ -581,7 +646,7 @@ function App() {
                 Cancel
               </button>
               <button className="confirm-delete-button" onClick={confirmDeleteActivity} type="button">
-                Delete entry
+                Delete {activityToDelete.status === 'todo' ? 'to-do' : 'entry'}
               </button>
             </div>
           </div>
