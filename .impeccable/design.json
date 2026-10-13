@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T16:40:38Z",
+  "title": "Design System: Daybook",
+  "extensions": {
+    "colorMeta": {
+      "action-violet": { "role": "primary", "displayName": "Action Violet", "canonical": "#6246bc", "tonalRamp": ["oklch(15% 0.10 295)", "oklch(27% 0.12 295)", "oklch(39% 0.15 295)", "oklch(51% 0.16 295)", "oklch(63% 0.13 295)", "oklch(75% 0.09 295)", "oklch(86% 0.05 295)", "oklch(95% 0.02 295)"] },
+      "hover-violet": { "role": "primary", "displayName": "Hover Violet", "canonical": "#5336ad", "tonalRamp": ["oklch(15% 0.10 295)", "oklch(27% 0.12 295)", "oklch(39% 0.15 295)", "oklch(51% 0.16 295)", "oklch(63% 0.13 295)", "oklch(75% 0.09 295)", "oklch(86% 0.05 295)", "oklch(95% 0.02 295)"] },
+      "label-violet": { "role": "primary", "displayName": "Ledger Violet", "canonical": "#6b50c4", "tonalRamp": ["oklch(15% 0.10 295)", "oklch(27% 0.12 295)", "oklch(39% 0.15 295)", "oklch(51% 0.16 295)", "oklch(63% 0.13 295)", "oklch(75% 0.09 295)", "oklch(86% 0.05 295)", "oklch(95% 0.02 295)"] },
+      "violet-wash": { "role": "primary", "displayName": "Violet Wash", "canonical": "#f0ecfa", "tonalRamp": ["oklch(15% 0.025 295)", "oklch(27% 0.035 295)", "oklch(39% 0.04 295)", "oklch(51% 0.045 295)", "oklch(63% 0.04 295)", "oklch(75% 0.035 295)", "oklch(86% 0.025 295)", "oklch(95% 0.015 295)"] },
+      "paper-ivory": { "role": "neutral", "displayName": "Paper Ivory", "canonical": "#fbfaf7", "tonalRamp": ["oklch(15% 0.01 85)", "oklch(27% 0.01 85)", "oklch(39% 0.01 85)", "oklch(51% 0.01 85)", "oklch(63% 0.01 85)", "oklch(75% 0.01 85)", "oklch(86% 0.01 85)", "oklch(95% 0.01 85)"] },
+      "warm-canvas": { "role": "neutral", "displayName": "Warm Canvas", "canonical": "#f5f3ed", "tonalRamp": ["oklch(15% 0.015 85)", "oklch(27% 0.015 85)", "oklch(39% 0.015 85)", "oklch(51% 0.015 85)", "oklch(63% 0.015 85)", "oklch(75% 0.015 85)", "oklch(86% 0.015 85)", "oklch(95% 0.015 85)"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#25222d", "tonalRamp": ["oklch(15% 0.012 300)", "oklch(27% 0.012 300)", "oklch(39% 0.012 300)", "oklch(51% 0.012 300)", "oklch(63% 0.012 300)", "oklch(75% 0.012 300)", "oklch(86% 0.012 300)", "oklch(95% 0.012 300)"] },
+      "muted-ink": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#77727c", "tonalRamp": ["oklch(15% 0.01 300)", "oklch(27% 0.01 300)", "oklch(39% 0.01 300)", "oklch(51% 0.01 300)", "oklch(63% 0.01 300)", "oklch(75% 0.01 300)", "oklch(86% 0.01 300)", "oklch(95% 0.01 300)"] },
+      "recap-sand": { "role": "secondary", "displayName": "Recap Sand", "canonical": "#f0ebe1", "tonalRamp": ["oklch(15% 0.02 75)", "oklch(27% 0.025 75)", "oklch(39% 0.03 75)", "oklch(51% 0.03 75)", "oklch(63% 0.025 75)", "oklch(75% 0.02 75)", "oklch(86% 0.015 75)", "oklch(95% 0.01 75)"] },
+      "recap-rust": { "role": "secondary", "displayName": "Recap Rust", "canonical": "#ad664e", "tonalRamp": ["oklch(15% 0.05 45)", "oklch(27% 0.07 45)", "oklch(39% 0.09 45)", "oklch(51% 0.10 45)", "oklch(63% 0.09 45)", "oklch(75% 0.07 45)", "oklch(86% 0.04 45)", "oklch(95% 0.02 45)"] },
+      "danger-coral": { "role": "tertiary", "displayName": "Delete Coral", "canonical": "#ad5848", "tonalRamp": ["oklch(15% 0.05 32)", "oklch(27% 0.07 32)", "oklch(39% 0.09 32)", "oklch(51% 0.10 32)", "oklch(63% 0.09 32)", "oklch(75% 0.07 32)", "oklch(86% 0.04 32)", "oklch(95% 0.02 32)"] },
+      "white": { "role": "neutral", "displayName": "White", "canonical": "#ffffff", "tonalRamp": ["oklch(15% 0 0)", "oklch(27% 0 0)", "oklch(39% 0 0)", "oklch(51% 0 0)", "oklch(63% 0 0)", "oklch(75% 0 0)", "oklch(86% 0 0)", "oklch(95% 0 0)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The large capture question." },
+      "headline": { "displayName": "Headline", "purpose": "Panel and history headings." },
+      "body": { "displayName": "Body", "purpose": "Activities, recaps, and form input." },
+      "label": { "displayName": "Label", "purpose": "Small uppercase section kickers." }
+    },
+    "shadows": [
+      { "name": "panel-ambient", "value": "0 15px 40px rgba(46, 40, 58, 0.055)", "purpose": "Resting work panels." },
+      { "name": "capture-focus", "value": "0 22px 55px rgba(61, 42, 115, 0.13), 0 0 0 4px rgba(105, 78, 196, 0.08)", "purpose": "Focused capture form." },
+      { "name": "capture-rest", "value": "0 20px 50px rgba(38, 31, 55, 0.09)", "purpose": "Resting capture form." },
+      { "name": "history-hover", "value": "0 10px 24px rgba(56, 43, 82, 0.09)", "purpose": "Hovered history tile." },
+      { "name": "dialog", "value": "0 24px 64px rgba(46, 35, 61, 0.18)", "purpose": "Modal dialogs." }
+    ],
+    "motion": [
+      { "name": "action-feedback", "value": "160ms ease", "purpose": "Capture button and history tile hover transitions." },
+      { "name": "small-control-feedback", "value": "150ms ease", "purpose": "Icon and dialog control hover transitions." },
+      { "name": "reduced-motion", "value": "0.01ms !important", "purpose": "Transition duration under prefers-reduced-motion: reduce." }
+    ],
+    "breakpoints": [
+      { "name": "stack-panels", "value": "960px" },
+      { "name": "mobile", "value": "680px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Capture Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Violet, elevated action for logging a completed item or adding a to-do.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Log activity <svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"M4 10h11M11 6l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; min-width: 156px; padding: 0 19px; border: 0; border-radius: 12px; background: #6246bc; box-shadow: 0 10px 22px rgba(83, 58, 165, 0.2); color: #fff; font: 700 14px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; cursor: pointer; transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease; } .ds-btn-primary svg { width: 19px; height: 19px; } .ds-btn-primary:hover { background: #5336ad; box-shadow: 0 12px 26px rgba(83, 58, 165, 0.27); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 3px solid rgba(105, 78, 196, 0.28); outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(0); } .ds-btn-primary:disabled { opacity: .48; cursor: not-allowed; }"
+    },
+    {
+      "name": "Complete To-do Button",
+      "kind": "button",
+      "refersTo": "button-complete",
+      "description": "Compact lavender completion action inside a pending row.",
+      "html": "<button class=\"ds-btn-complete\" type=\"button\">Done</button>",
+      "css": ".ds-btn-complete { min-height: 31px; padding: 0 11px; border: 0; border-radius: 8px; background: #f0ecfa; color: #6246bc; font: 700 12px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; cursor: pointer; } .ds-btn-complete:hover { background: #e6def8; } .ds-btn-complete:focus-visible { outline: 3px solid rgba(105, 78, 196, 0.28); outline-offset: 2px; } .ds-btn-complete:active { background: #e6def8; }"
+    },
+    {
+      "name": "Delete Confirmation Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Coral destructive action reserved for the confirmation dialog.",
+      "html": "<button class=\"ds-btn-danger\" type=\"button\">Delete entry</button>",
+      "css": ".ds-btn-danger { min-height: 42px; padding: 10px 15px; border: 0; border-radius: 10px; background: #ad5848; box-shadow: 0 8px 18px rgba(173, 88, 72, 0.2); color: #fff; font: 700 13px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; cursor: pointer; transition: background 150ms ease, box-shadow 150ms ease, transform 150ms ease; } .ds-btn-danger:hover { background: #984839; box-shadow: 0 10px 22px rgba(173, 88, 72, 0.27); transform: translateY(-1px); } .ds-btn-danger:focus-visible { outline: 3px solid rgba(105, 78, 196, 0.28); outline-offset: 2px; } .ds-btn-danger:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Capture Mode Switch",
+      "kind": "chip",
+      "refersTo": "capture-mode-active",
+      "description": "Lavender two-option control with a white selected segment.",
+      "html": "<div class=\"ds-mode\" role=\"group\" aria-label=\"What are you adding?\"><button type=\"button\" aria-pressed=\"true\">Done</button><button type=\"button\" aria-pressed=\"false\">To do</button></div>",
+      "css": ".ds-mode { display: inline-flex; gap: 3px; padding: 4px; border: 1px solid rgba(105, 78, 196, 0.13); border-radius: 12px; background: #f0ecfa; } .ds-mode button { padding: 9px 16px; border: 0; border-radius: 8px; background: transparent; color: #746985; font: 700 13px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; cursor: pointer; } .ds-mode button[aria-pressed='true'] { background: #fff; box-shadow: 0 2px 8px rgba(56, 43, 82, 0.1); color: #6246bc; } .ds-mode button:hover { color: #6246bc; } .ds-mode button:focus-visible { outline: 3px solid rgba(105, 78, 196, 0.28); outline-offset: 2px; }"
+    },
+    {
+      "name": "Capture Input",
+      "kind": "input",
+      "description": "Borderless activity field inside an elevated ivory shell.",
+      "html": "<label class=\"ds-capture-field\"><span>Activity</span><input type=\"text\" placeholder=\"e.g. Shipped the new onboarding flow\" /></label>",
+      "css": ".ds-capture-field { display: block; width: min(100%, 380px); padding: 10px 22px; border: 1px solid rgba(56, 50, 68, 0.11); border-radius: 18px; background: rgba(255, 255, 255, 0.88); box-shadow: 0 20px 50px rgba(38, 31, 55, 0.09); font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; } .ds-capture-field span { display: block; font-size: 0; } .ds-capture-field input { width: 100%; padding: 13px 0; border: 0; outline: 0; background: transparent; color: #27232d; font: 400 16px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; } .ds-capture-field input::placeholder { color: #aaa5ae; } .ds-capture-field:focus-within { border-color: rgba(105, 78, 196, 0.55); box-shadow: 0 22px 55px rgba(61, 42, 115, 0.13), 0 0 0 4px rgba(105, 78, 196, 0.08); }"
+    },
+    {
+      "name": "Work Panel",
+      "kind": "card",
+      "refersTo": "panel-default",
+      "description": "Lightly bordered, translucent surface for the day's entries.",
+      "html": "<section class=\"ds-work-panel\"><span class=\"ds-work-kicker\">Today</span><h2>Your progress</h2><p>Capture your work while it is fresh.</p></section>",
+      "css": ".ds-work-panel { min-height: 180px; padding: 28px; border: 1px solid rgba(51, 44, 62, 0.1); border-radius: 20px; background: rgba(255, 255, 255, 0.66); box-shadow: 0 15px 40px rgba(46, 40, 58, 0.055); color: #25222d; } .ds-work-kicker { color: #6b50c4; font: 800 11px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: .14em; text-transform: uppercase; } .ds-work-panel h2 { margin: 7px 0 16px; font: 500 27px Georgia, 'Times New Roman', serif; letter-spacing: -.025em; } .ds-work-panel p { margin: 0; color: #77727c; font: 400 16px/1.45 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }"
+    },
+    {
+      "name": "History Day",
+      "kind": "custom",
+      "refersTo": "history-current",
+      "description": "Compact date and entry-preview tile with a distinct today state.",
+      "html": "<div class=\"ds-history-day\" role=\"button\" tabindex=\"0\" aria-label=\"View activities for today\"><div class=\"ds-history-heading\"><span>Today<br/>13/10/2026</span><strong>2</strong></div><p>Reviewed a pull request</p></div>",
+      "css": ".ds-history-day { min-height: 142px; padding: 13px; border: 1px solid rgba(105, 78, 196, 0.2); border-radius: 13px; background: #f0ecfa; cursor: pointer; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; } .ds-history-heading { display: flex; justify-content: space-between; gap: 6px; color: #736d76; font-size: 10px; font-weight: 700; } .ds-history-heading strong { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #6b50bd; color: #fff; font-size: 9px; } .ds-history-day p { overflow: hidden; margin: 15px 0 0; color: #5e5761; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; } .ds-history-day:hover { border-color: rgba(105, 78, 196, 0.3); box-shadow: 0 10px 24px rgba(56, 43, 82, 0.09); transform: translateY(-2px); } .ds-history-day:focus-visible { outline: 3px solid rgba(105, 78, 196, 0.28); outline-offset: 2px; }"
+    },
+    {
+      "name": "Count Badge",
+      "kind": "chip",
+      "description": "Small pill for entry totals beside a panel heading.",
+      "html": "<span class=\"ds-count-badge\">3 entries</span>",
+      "css": ".ds-count-badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #f0ecfa; color: #634bac; font: 700 11px Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Quiet Ledger",
+    "overview": "Daybook treats the workday as a record worth keeping without making it feel like bookkeeping. Calm and capable typography, warm ivory ground, violet decisions, and orderly groups make short notes easy to write and easy to recover. This is an operating interface, not a metrics dashboard.\n\nThe forms and panels are softly layered rather than flat or dramatically floating. Controls feel soft and precise: generous enough to invite quick capture, restrained enough to let the entries remain the focus. The one playful gesture is the slightly tilted spark mark; it does not become a decorative motif across the interface.",
+    "keyCharacteristics": [
+      "Warm paper-like canvas with translucent white work surfaces.",
+      "Georgia headings paired with an Inter-first system sans stack for reading and controls.",
+      "Violet for capture, completion, selection, and focus; warm rust for the previous-workday recap; coral for destructive actions.",
+      "Rounded, lightly bordered surfaces with a stronger ambient lift around the capture form."
+    ],
+    "rules": [
+      { "name": "The One-Action Rule", "body": "Use violet for ordinary action and coral only for destructive confirmation; do not give both meanings the same accent.", "section": "colors" },
+      { "name": "The Record-First Rule", "body": "Use serif type for the prominent question and section headings; keep entries, dates, controls, and supporting instructions in sans serif so the record scans quickly.", "section": "typography" },
+      { "name": "The Quiet Elevation Rule", "body": "Keep resting surfaces subtly separated by translucency and border; reserve noticeable lift for input focus, hover feedback, and modal overlays.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep a clear path from capture to to-dos, today's work, previous workday, and history.",
+      "Do use warm surfaces and light borders to separate work areas, reserving the most prominent in-page shadow for the capture form and deeper elevation for dialogs.",
+      "Do retain distinct keyboard-focus treatments and the existing reduced-motion behavior when extending controls."
+    ],
+    "donts": [
+      "Don't turn the page into a corporate dashboard with dense metric widgets, heavy navigation chrome, or data-viz decoration.",
+      "Don't use coral as a general CTA or make ordinary actions look destructive.",
+      "Don't replace every row divider with another floating card; the entries should remain the content."
+    ]
+  }
+}
